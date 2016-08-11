@@ -47,12 +47,12 @@ def background_thread():
     while True:
         socketio.sleep(tick)
         if not app.paused:
-            # print("f")
             app.snake.MakeStep()
         response = {}
         response["snake"] = app.snake.GetAsDict()
         response["game_over"] = not app.snake.is_alive
         response["apple"] = {"x":app.snake.apple.x, "y":app.snake.apple.y}
+        response["field"] = {"width": cols, "height": rows}
         socketio.emit(
             "field_change",
             response,

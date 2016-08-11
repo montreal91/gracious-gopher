@@ -1,14 +1,28 @@
+const FIELD_COLOUR = "rgb(220, 230, 220)";
+const SNAKE_COLOUR = "rgb(50, 200, 50)";
+const APPLE_COLOUR = "rgb(50, 50, 200)";
 
 function DrawSnakeBody(canvas, aray) {
     for (var i = 0; i < aray.length; i++) { 
-         DrawSquare(canvas, aray[i], "rgb(50, 200, 50)");
+         DrawSquare(canvas, aray[i], SNAKE_COLOUR);
     }
 }
 
 function DrawSquare(canvas, point, colour) {
     var context = canvas.getContext("2d");
     context.fillStyle = colour;
-    context.fillRect(point.x * 50, point.y * 50, 50, 50);
+    context.fillRect(point.x * 50-1, point.y * 50-1, 49, 49);
+}
+
+function DrawEmptyField(canvas, params) {
+    var context = canvas.getContext("2d");
+    // console.log(colour);
+    // context.fillStyle = colour;
+    for (var i = 0; i < params.width; i++) {
+        for (var j = 0; j < params.height; j++) {
+            DrawSquare(canvas, {x:i, y:j}, FIELD_COLOUR);
+        }
+    }
 }
 
 function DrawApple(canvas, apple) {
@@ -22,19 +36,21 @@ function DrawGameOver(canvas) {
     context.fillText("Game Over", canvas.width / 2, canvas.height / 2);
 }
 
-function RenderEverything(snake, apple, game_over) {
+function RenderEverything(everything) {
     var canvas = document.getElementById("snake_field");
     var ccontext = canvas.getContext("2d");
     ccontext.clearRect(0, 0, canvas.width, canvas.height);
-    DrawSnakeBody(canvas, snake);
-    DrawApple(canvas, apple);
-    if (game_over) {
+    DrawEmptyField(canvas, everything.field);
+    DrawSnakeBody(canvas, everything.snake.bodey);
+    // console.log(everything.apple);
+    DrawApple(canvas, everything.apple);
+    if (everything.game_over) {
         DrawGameOver(canvas);
     }
 }
 
 function FieldUpdate(msg) {
-    RenderEverything(msg.snake.bodey, msg.apple, msg.game_over);
+    RenderEverything(msg);
 }
 
 
