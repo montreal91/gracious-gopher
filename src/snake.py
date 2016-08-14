@@ -1,7 +1,8 @@
 
 from collections import deque
 from random import randint
-from point import GPoint
+
+from src.point import GPoint
 
 class GStruct:
     pass
@@ -40,7 +41,6 @@ class GSnake(object):
         a = 0 <= self.head.x < self._max_x
         b = 0 <= self.head.y < self._max_y
         c = not self._bite_self
-        print(a, b, c)
         return a and b and c    
     
 
