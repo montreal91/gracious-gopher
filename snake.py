@@ -40,7 +40,6 @@ class GSnake(object):
         a = 0 <= self.head.x < self._max_x
         b = 0 <= self.head.y < self._max_y
         c = not self._bite_self
-        print(a, b, c)
         return a and b and c    
     
 

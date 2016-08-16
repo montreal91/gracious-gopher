@@ -3,16 +3,77 @@ import time
 
 from collections        import deque
 
-from flask              import Flask, render_template, session, request
+from flask              import Flask, render_template, session
+from flask              import request, redirect, url_for
 from flask.ext.socketio import SocketIO, emit, join_room
 from flask.ext.socketio import leave_room, close_room, rooms
 from flask.ext.socketio import disconnect
+
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user
+from flask_login import logout_user, current_user
+
+from oauth import OAuthSignIn
 
 async_mode = None
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
+app.config["OAUTH_CREDENTIALS"] = {
+    "facebook": {
+        "id": "650606668431442",
+        "secret": "d9767807b88131d863160b4765575644"
+    }
+}
 socketio = SocketIO(app, async_mode=async_mode)
+db = SQLAlchemy(app)
+lm = LoginManager(app)
+lm.login_view = "index"
+
+class User(UserMixin, db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    social_id = db.Column(db.String(64), nullable=False, unique=True)
+    nickname = db.Column(db.String(64), nullable=False)
+    email = db.Column(db.String(64), nullable=False)
+
+@lm.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/logout/")
+def logout():
+    logout_user()
+    return redirect(url_for("index"))
+
+@app.route("/authorize/<provider>/")
+def oauth_authorize(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for("index"))
+    oauth = OAuthSignIn.get_provider(provider)
+    return oauth.authorize()
+
+@app.route("/callback/<provider>/")
+def oauth_callback(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for("index"))
+    oauth = OAuthSignIn.get_provider(provider)
+    social_id, username, email = oauth.callback()
+    if social_id is None:
+        flash("Authentication failed.")
+        return redirect(url_for("index"))
+    user = User.query.filter_by(social_id=social_id).first()
+    if not user:
+        user = User(social_id=social_id, nickname=username, email=email)
+        db.session.add(user)
+        db.session.commit()
+    login_user(user, True)
+    return redirect(url_for("index"))
 
 thread = None
 
@@ -62,10 +123,6 @@ def background_thread():
             restart_game()
             socketio.sleep(2)
 
-
-@app.route("/")
-def index():
-    return render_template("index.html")
 
 
 @socketio.on('my event', namespace='/test')
@@ -125,4 +182,5 @@ def test_disconnect():
 
 
 if __name__ == "__main__":
+    db.create_all()
     socketio.run(app, debug=True)
