@@ -24,6 +24,10 @@ app.config["OAUTH_CREDENTIALS"] = {
     "facebook": {
         "id": "650606668431442",
         "secret": "d9767807b88131d863160b4765575644"
+    },
+    "twitter": {
+        "id": "nacVD2Z2iPM9oPPklKqvMncF8",
+        "secret": "83Y0uytxgMDQVf5V6FJNwkcDfGcJxko4GLNDoQY4shWbiQKzxE"
     }
 }
 socketio = SocketIO(app, async_mode=async_mode)
@@ -36,7 +40,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(64), nullable=False)
+    email = db.Column(db.String(64), nullable=True)
 
 @lm.user_loader
 def load_user(id):
