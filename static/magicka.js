@@ -2,6 +2,8 @@ const FIELD_COLOUR = "rgb(220, 230, 220)";
 const SNAKE_COLOUR = "rgb(50, 200, 50)";
 const APPLE_COLOUR = "rgb(50, 50, 200)";
 
+
+
 function DrawSnakeBody(canvas, aray) {
     for (var i = 0; i < aray.length; i++) { 
          DrawSquare(canvas, aray[i], SNAKE_COLOUR);
@@ -56,6 +58,27 @@ function FieldUpdate(msg) {
 
 namespace = '/test';
 var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+console.log(document.domain);
+
+function giOpenTab(event, tab_name) {
+    // console.log(event);
+    var i, tab_content, tab_links;
+
+    tab_content = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tab_content.length; i++) {
+        tab_content[i].style.display = "none";
+    }
+
+    tab_links = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tab_links.length; i++) {
+        tab_links[i].className = tab_links[i].className.replace(" active", "");
+    }
+
+    document.getElementById(tab_name).style.display = "block";
+    event.currentTarget.className += " active";
+
+    socket.emit("init_game", {});
+}
         
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight") {
@@ -79,10 +102,28 @@ document.addEventListener("keydown", (event) => {
 }, false);
 
 function Main() {
+    // console.log("Main");
     socket.on("field_change", FieldUpdate);
 
-    socket.on("connect", function() {
-         socket.emit('my event', {data: 'I\'m connected!'});
+    // socket.on("connect", function(msg) {
+    //     console.log(msg);
+    //     // var div = document.getElementById("some_id");
+    //     // div.innerText = msg.message;
+    //      socket.emit('my event', {data: 'I\'m connected!'});
+    // });
+
+    socket.on("my response", function(msg) {
+        console.log(msg);
+    });
+
+    socket.on("init_response", function(msg){
+        console.log(msg);
+        var canvas = document.getElementById("snake_field");
+        DrawEmptyField(canvas, msg.field);
+    });
+
+    socket.on("poop", function(msg) {
+        console.log(msg);
     });
 
     // Interval function that tests message latency by sending a "ping"
@@ -103,8 +144,8 @@ function Main() {
         var sum = 0;
         for (var i = 0; i < ping_pong_times.length; i++)
             sum += ping_pong_times[i];
-        var ping_pong_div = document.getElementById("ping-pong");
-        ping_pong_div.innerText = Math.round(10 * sum / ping_pong_times.length) / 10;
+        // var ping_pong_div = document.getElementById("ping-pong");
+        // ping_pong_div.innerText = Math.round(10 * sum / ping_pong_times.length) / 10;
     }
     socket.on("my pong", CalculatePingLatency);
 }
